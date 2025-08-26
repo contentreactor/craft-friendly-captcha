@@ -28,3 +28,12 @@ composer require contentreactor/craft-friendly-captcha
 # tell Craft to install the plugin
 ./craft plugin/install craft-friendly-captcha
 ```
+
+
+```php
+{{ craft.friendlyCaptcha.renderWidget() }}
+```
+
+```php
+FriendlyCaptcha::getInstance()->getValidate()->validateRequest()
+```

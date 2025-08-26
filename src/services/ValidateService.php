@@ -32,7 +32,7 @@ class ValidateService extends Component
 
 	public function validateRequest(): bool
 	{
-		$didSubmit = Craft::$app->getRequest()->getMethod() === 'POST';
+		$didSubmit = Craft::$app->getRequest()->getIsPost();
 
 		if (!$didSubmit) return false;
 
@@ -48,7 +48,6 @@ class ValidateService extends Component
 
 			return false;
 		}
-
 		return $captchaResult->shouldAccept();
 	}
 
