@@ -66,7 +66,7 @@ class ValidateService extends Component
 		];
 
 		if ($settings->darkMode) {
-			$defaultAttributes['class'] = 'frc-captcha dark';
+			$defaultAttributes['data-theme'] = 'dark';
 		}
 
 		$attributes = array_merge($defaultAttributes, $attributes);
