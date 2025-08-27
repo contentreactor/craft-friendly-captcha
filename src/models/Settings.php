@@ -41,6 +41,13 @@ class Settings extends Model
 	public string $startEvent = 'focus';
 
 	/**
+	 * Friendly Captcha Version
+	 *
+	 * @var string
+	 */
+	public string $version = 'v2';
+
+	/**
 	 * @var bool
 	 */
 	public bool $darkMode = false;
@@ -53,6 +60,11 @@ class Settings extends Model
 	public function getApiKey(): string
 	{
 		return App::parseEnv($this->apiKey);
+	}
+
+	public function getVersion(): string
+	{
+		return $this->version;
 	}
 
 	public function behaviors(): array
@@ -71,7 +83,7 @@ class Settings extends Model
 			['siteKey', 'string'],
 			['apiKey', 'string'],
 			['startEvent', 'in', 'range' => ['auto', 'focus', 'none']],
-			[['siteKey', 'apiKey', 'startEvent'], 'required'],
+			[['siteKey', 'apiKey', 'startEvent', 'version'], 'required'],
 			['validateUsersRegistration', 'boolean'],
 		];
 	}

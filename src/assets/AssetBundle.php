@@ -11,8 +11,10 @@ class AssetBundle extends BaseAssetBundle
 		$this->sourcePath = '@cfc/assets/js';
 
 		$this->js = [
-			'friendlycaptcha.min.js',
-			'friendlycaptcha.module.min.js',
+			'friendlycaptchav2.min.js',
+			'friendlycaptchav2.module.min.js',
+			'friendlycaptchav1.min.js',
+			'friendlycaptchav1.module.min.js',
 		];
 
 		parent::init();
