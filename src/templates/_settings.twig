@@ -5,6 +5,22 @@
 
 <h2>Friendly Captcha keys</h2>
 
+{{ forms.selectField({
+    label: 'Friendly Captcha Version',
+    instructions: 'You can specify which version you would like to use',
+    name: 'version',
+    value: settings.version ?? 'v2',
+	required: true,
+    options: [{
+        value: 'v1',
+        label: 'Friendly Captcha V1',
+    }, {
+        value: 'v2',
+        label: 'Friendly Captcha V2',
+    }],
+    errors: settings.getErrors('startEvent')
+}) }}
+
 {{ forms.autosuggestField({
     label: 'Site Key',
     instructions: 'Your personal Friendly Captcha site key.',
