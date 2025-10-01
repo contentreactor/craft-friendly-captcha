@@ -9,7 +9,7 @@
   },
   "require": {
     "php": ">=8.2",
-    "craftcms/cms": "^5.0",
+    "craftcms/cms": "^4.0",
 	"friendlycaptcha/sdk": "^0.1.2"
   },
   "autoload": {

@@ -35,5 +35,5 @@ composer require contentreactor/craft-friendly-captcha
 ```
 
 ```php
-FriendlyCaptcha::getInstance()->getValidate()->validateRequest()
+Plugin::getInstance()->getValidate()->validateRequest()
 ```
