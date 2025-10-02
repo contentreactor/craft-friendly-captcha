@@ -1,7 +1,7 @@
 {
   "name": "contentreactor/craft-friendly-captcha",
   "description": "Friendly Captcha v1 and v2 integration for CraftCMS",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "type": "craft-plugin",
   "license": "mit",
   "support": {
@@ -9,7 +9,7 @@
   },
   "require": {
     "php": ">=8.2",
-    "craftcms/cms": "^4.0",
+    "craftcms/cms": "^4.0||^5.0",
 	"friendlycaptcha/sdk": "^0.1.2"
   },
   "autoload": {
