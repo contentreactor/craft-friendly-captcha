@@ -40,5 +40,7 @@ Use the following code in templates to render the widget:
 Use the following code to validate the solution:
 
 ```php
+use contentreactor\craftfriendlycaptcha\Plugin;
+
 Plugin::getInstance()->getValidate()->validateRequest()
 ```
