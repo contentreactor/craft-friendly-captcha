@@ -29,10 +29,15 @@ composer require contentreactor/craft-friendly-captcha
 ./craft plugin/install craft-friendly-captcha
 ```
 
+## Usage
+
+Use the following code in templates to render the widget:
 
 ```php
 {{ craft.friendlyCaptcha.renderWidget() }}
 ```
+
+Use the following code to validate the solution:
 
 ```php
 Plugin::getInstance()->getValidate()->validateRequest()
