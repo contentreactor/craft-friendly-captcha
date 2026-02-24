@@ -2,7 +2,9 @@
 
 namespace contentreactor\craftfriendlycaptcha\variables;
 
+use contentreactor\craftfriendlycaptcha\assets\CssBundle;
 use contentreactor\craftfriendlycaptcha\Plugin;
+use Craft;
 use Twig\Markup;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
@@ -33,6 +35,9 @@ class FriendlyCaptchaVariable
 
 	/**
 	 * {{ craft.friendlyCaptcha.renderWidget() }}
+	 * {{ craft.friendlyCaptcha.renderWidget({
+	 *		invisible: true
+	 *	}) }}
 	 *
 	 * @param array $attributes
 	 * @return Markup
@@ -41,6 +46,9 @@ class FriendlyCaptchaVariable
 	 */
 	public function renderWidget(array $attributes = []): Markup
 	{
-		return Plugin::getInstance()->getValidate()->renderWidget($attributes);
+		$attributes = $config['attributes'] ?? [];
+		$invisible  = $config['invisible'] ?? false;
+		Craft::$app->getView()->registerAssetBundle(CssBundle::class);
+		return Plugin::getInstance()->getValidate()->renderWidget($attributes, $invisible);
 	}
 }

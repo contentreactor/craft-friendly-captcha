@@ -73,7 +73,7 @@ class ValidateService extends Component
 		return false;
 	}
 
-	public function renderWidget(array $attributes = []): Markup
+	public function renderWidget(array $attributes = [], bool $invisible = false): Markup
 	{
 		$settings = Plugin::$plugin->getSettings();
 
@@ -94,13 +94,18 @@ class ValidateService extends Component
 			'data-start' => $settings->startEvent,
 		];
 
+		if ($invisible && $this->getVersion() === 'v2') {
+			$defaultAttributes['data-start'] = 'auto';
+			$defaultAttributes['class'] .= ' frc-captcha-hidden';
+		}
+
 		if ($settings->darkMode) {
 			if ($this->getVersion() === 'v2') {
 				$defaultAttributes['data-theme'] = 'dark';
 			}
 
 			if ($this->getVersion() === 'v1') {
-				$defaultAttributes['class'] = 'frc-captcha dark';
+				$defaultAttributes['class'] .= ' frc-captcha dark';
 			}
 		}
 
