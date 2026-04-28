@@ -1,30 +1,34 @@
 <?php
+declare(strict_types=1);
 
 namespace contentreactor\craftfriendlycaptcha\variables;
 
 use contentreactor\craftfriendlycaptcha\Plugin;
+use Exception;
 use Twig\Markup;
-use yii\base\Exception;
-use yii\base\InvalidConfigException;
 
 class FriendlyCaptchaVariable
 {
-
 	/**
+	 * ```twig
+	 *
 	 * {{ craft.friendlyCaptcha.siteKey }}
+	 * ```
 	 *
 	 * @return string
 	 */
 	public function siteKey(): string
 	{
-		return Plugin::$plugin->getSettings()->getSiteKey();
+		return Plugin::getInstance()->getSettings()->getSiteKey();
 	}
 
 	/**
-	 * {{ craft.friendlyCaptcha.validateRequest }}
+	 * ```twig
 	 *
-	 * @return bool
-	 * @throws \Exception
+	 * {{ craft.friendlyCaptcha.validateRequest }}
+	 * ```
+	 *
+	 * @throws Exception
 	 */
 	public function validateRequest(): bool
 	{
@@ -32,15 +36,19 @@ class FriendlyCaptchaVariable
 	}
 
 	/**
+	 * ```twig
+	 *
 	 * {{ craft.friendlyCaptcha.renderWidget() }}
+	 *
+	 * {{ craft.friendlyCaptcha.renderWidget({ invisible: true }) }}
+	 * ```
 	 *
 	 * @param array $attributes
 	 * @return Markup
-	 * @throws Exception
-	 * @throws InvalidConfigException
 	 */
 	public function renderWidget(array $attributes = []): Markup
 	{
-		return Plugin::getInstance()->getValidate()->renderWidget($attributes);
+		$invisible  = $attributes['invisible'] ?? false;
+		return Plugin::getInstance()->getValidate()->renderWidget($attributes, $invisible);
 	}
 }
