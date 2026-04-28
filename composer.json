@@ -1,36 +1,37 @@
 {
-  "name": "contentreactor/craft-friendly-captcha",
-  "description": "Friendly Captcha v1 and v2 integration for CraftCMS",
-  "version": "1.0.8",
-  "type": "craft-plugin",
-  "license": "mit",
-  "support": {
-    "email": "noreply@contentreactor.com"
-  },
-  "require": {
-    "php": ">=8.2",
-    "craftcms/cms": "^4.0||^5.0",
-	"friendlycaptcha/sdk": "^0.1.2"
-  },
-  "autoload": {
-    "psr-4": {
-      "contentreactor\\craftfriendlycaptcha\\": "src/"
-    }
-  },
-  "extra": {
-    "handle": "craft-friendly-captcha",
-    "name": "Craft Friendly Captcha",
-    "developer": "ContentReactor",
-    "documentationUrl": ""
-  },
-  "config": {
-    "sort-packages": true,
-    "platform": {
-      "php": "8.2"
-    },
-    "allow-plugins": {
-      "yiisoft/yii2-composer": true,
-      "craftcms/plugin-installer": true
-    }
-  }
+	"name": "contentreactor/craft-friendly-captcha",
+	"description": "Friendly Captcha v1 and v2 integration for CraftCMS",
+	"version": "1.1.0",
+	"type": "craft-plugin",
+	"license": "mit",
+	"support": {
+		"email": "noreply@contentreactor.com"
+	},
+	"require": {
+		"php": ">=8.2",
+		"craftcms/cms": "^4.0||^5.0",
+		"friendlycaptcha/sdk": "^0.1.2",
+		"ext-curl": "*"
+	},
+	"autoload": {
+		"psr-4": {
+			"contentreactor\\craftfriendlycaptcha\\": "src/"
+		}
+	},
+	"extra": {
+		"handle": "craft-friendly-captcha",
+		"name": "Craft Friendly Captcha",
+		"developer": "ContentReactor",
+		"documentationUrl": ""
+	},
+	"config": {
+		"sort-packages": true,
+		"platform": {
+			"php": "8.2"
+		},
+		"allow-plugins": {
+			"yiisoft/yii2-composer": true,
+			"craftcms/plugin-installer": true
+		}
+	}
 }

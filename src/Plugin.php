@@ -1,18 +1,19 @@
 <?php
+declare(strict_types=1);
 
 namespace contentreactor\craftfriendlycaptcha;
 
-use Craft;
 use contentreactor\craftfriendlycaptcha\models\Settings;
-use yii\base\Event;
+use contentreactor\craftfriendlycaptcha\services\ValidateService;
+use contentreactor\craftfriendlycaptcha\traits\Services;
+use contentreactor\craftfriendlycaptcha\variables\FriendlyCaptchaVariable;
+use Craft;
 use craft\base\Model;
 use craft\base\Plugin as BasePlugin;
-use craft\web\twig\variables\CraftVariable;
-use contentreactor\craftfriendlycaptcha\variables\FriendlyCaptchaVariable;
 use craft\elements\User;
 use craft\events\ModelEvent;
-use contentreactor\craftfriendlycaptcha\services\ValidateService as ValidateService;
-use contentreactor\craftfriendlycaptcha\traits\Services;
+use craft\web\twig\variables\CraftVariable;
+use yii\base\Event;
 
 /**
  * Craft Friendly Captcha plugin
@@ -29,37 +30,50 @@ class Plugin extends BasePlugin
 {
 	use Services;
 
-	/**
-	 * Static property that is an instance of this plugin class so that it can be accessed via
-	 * FriendlyCaptcha::$plugin
-	 *
-	 * @var Plugin
-	 */
-	public static Plugin $plugin;
-
 	public string $schemaVersion = '1.0.0';
 	public bool $hasCpSettings = true;
-
-	public static function config(): array
-	{
-		return [
-			'components' => [
-				'validateService' => ValidateService::class,
-			],
-		];
-	}
 
 	public function init(): void
 	{
 		parent::init();
-		self::$plugin = $this;
-		$this->attachEventHandlers();
 
 		Craft::$app->onInit(function () {
-			$this->_setVariable();
-			$this->_handleUserRegistration();
+			$this->attachEventHandlers();
 			Craft::setAlias('@cfc', __DIR__);
 		});
+	}
+
+	private function attachEventHandlers(): void
+	{
+		Event::on(
+			CraftVariable::class,
+			CraftVariable::EVENT_INIT,
+			static function (Event $event): void {
+				if (!$event->sender instanceof CraftVariable) return;
+
+				$event->sender->set('friendlyCaptcha', FriendlyCaptchaVariable::class);
+			},
+		);
+
+		if (Craft::$app->getRequest()->getIsSiteRequest()) {
+			if ($this->getSettings()->validateUsersRegistration) {
+				Event::on(
+					User::class,
+					User::EVENT_BEFORE_VALIDATE,
+					function (ModelEvent $event): void {
+						if (!$event->sender instanceof User) return;
+
+						// Only new users
+						if ($event->isNew) {
+							if (!$this->getValidate()->validateRequest()) {
+								$event->sender->addError('friendlyCaptcha', Craft::t('craft-friendly-captcha', 'Please verify you are human.'));
+								$event->isValid = false;
+							}
+						}
+					}
+				);
+			}
+		}
 	}
 
 	protected function createSettingsModel(): ?Model
@@ -73,42 +87,5 @@ class Plugin extends BasePlugin
 			'plugin' => $this,
 			'settings' => $this->getSettings(),
 		]);
-	}
-
-	private function attachEventHandlers(): void
-	{
-		// Register event handlers here ...
-		// (see https://craftcms.com/docs/5.x/extend/events.html to get started)
-	}
-
-	private function _setVariable(): void
-	{
-		Event::on(
-			CraftVariable::class,
-			CraftVariable::EVENT_INIT,
-			function (Event $event) {
-				/** @var CraftVariable $variable */
-				$variable = $event->sender;
-				$variable->set('friendlyCaptcha', FriendlyCaptchaVariable::class);
-			}
-		);
-	}
-
-	private function _handleUserRegistration()
-	{
-		if ($this->settings->validateUsersRegistration && Craft::$app->getRequest()->getIsSiteRequest()) {
-			Event::on(User::class, User::EVENT_BEFORE_VALIDATE, function (ModelEvent $event) {
-				/** @var User $user */
-				$user = $event->sender;
-
-				// Only new users
-				if ($user->id === null && $user->uid === null && $user->contentId === null) {
-					if (!$this->validate->validateRequest()) {
-						$user->addError('friendlyCaptcha', Craft::t('friendly-captcha', 'Please verify you are human.'));
-						$event->isValid = false;
-					}
-				}
-			});
-		}
 	}
 }

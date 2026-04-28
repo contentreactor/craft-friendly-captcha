@@ -1,7 +1,10 @@
 <?php
+declare(strict_types=1);
 
 namespace contentreactor\craftfriendlycaptcha\services;
 
+use contentreactor\craftfriendlycaptcha\assets\FriendlyCaptchaBundle;
+use contentreactor\craftfriendlycaptcha\models\Settings;
 use contentreactor\craftfriendlycaptcha\Plugin;
 use Craft;
 use craft\base\Component;
@@ -13,6 +16,8 @@ use Exception;
 
 class ValidateService extends Component
 {
+
+	/** @var array<string, string> */
 	protected array $endpoints = [
 		'global' => 'https://api.friendlycaptcha.com/api/v1/',
 		'eu' => 'https://eu-api.friendlycaptcha.eu/api/v1/',
@@ -33,9 +38,9 @@ class ValidateService extends Component
 		return Plugin::getInstance()->getSettings()->getVersion();
 	}
 
-	public function getConnection()
+	public function getConnection(): Client
 	{
-		$settings = Plugin::$plugin->getSettings();
+		$settings = Plugin::getInstance()->getSettings();
 		$config = new ClientConfig();
 		$config->setAPIKey($settings->getApiKey())->setSitekey($settings->getSiteKey());
 		return new Client($config);
@@ -43,49 +48,45 @@ class ValidateService extends Component
 
 	public function validateRequest(): bool
 	{
-		if ($this->getVersion() === 'v1') {
-			$solution = Craft::$app->getRequest()->getParam('frc-captcha-solution');
-			$siteKey = $this->getSiteKey();
-			$apiKey = $this->getApiKey();
-			return $this->validateSolution($solution, $siteKey, $apiKey);
-		}
+		return match ($this->getVersion()) {
+			Settings::PLUGIN_VERSION_1 => $this->validateV1Request(),
+			Settings::PLUGIN_VERSION_2 => $this->validateV2Request(),
+			default => false,
+		};
+	}
 
-		if ($this->getVersion() === 'v2') {
-			$didSubmit = Craft::$app->getRequest()->getIsPost();
+	protected function validateV1Request(): bool
+	{
+		$solution = Craft::$app->getRequest()->getParam('frc-captcha-solution');
+		$siteKey = $this->getSiteKey();
+		$apiKey = $this->getApiKey();
+		return $this->validateSolution($solution, $siteKey, $apiKey);
+	}
 
-			if (!$didSubmit) return false;
+	protected function validateV2Request(): bool
+	{
+		$didSubmit = Craft::$app->getRequest()->getIsPost();
 
-			$captchaResponse = Craft::$app->getRequest()->getBodyParam('frc-captcha-response');
-			$captchaResult = $this->getConnection()->verifyCaptchaResponse($captchaResponse);
+		if (!$didSubmit) return false;
 
-			if (!$captchaResult->wasAbleToVerify()) {
-				Craft::info('Failed to verify captcha response: ' . $captchaResult->getErrorCode() . ' ' . print_r($captchaResult->getResponseError(), true), 'contentreactor-friendly-captcha');
+		$captchaResponse = Craft::$app->getRequest()->getBodyParam('frc-captcha-response');
+		$captchaResult = $this->getConnection()->verifyCaptchaResponse($captchaResponse);
 
-				if ($captchaResult->isClientError()) {
-					Craft::info('CAPTCHA CONFIG ERROR:' . $captchaResult->getErrorCode() . ' ' . print_r($captchaResult->getResponseError(), true), 'contentreactor-friendly-captcha');
-				}
+		if (!$captchaResult->wasAbleToVerify()) {
+			Craft::info('Failed to verify captcha response: ' . $captchaResult->getErrorCode() . ' ' . print_r($captchaResult->getResponseError(), true), 'contentreactor-friendly-captcha');
 
-				return false;
+			if ($captchaResult->isClientError()) {
+				Craft::info('CAPTCHA CONFIG ERROR:' . $captchaResult->getErrorCode() . ' ' . print_r($captchaResult->getResponseError(), true), 'contentreactor-friendly-captcha');
 			}
-			return $captchaResult->shouldAccept();
-		}
 
-		return false;
+			return false;
+		}
+		return $captchaResult->shouldAccept();
 	}
 
 	public function renderWidget(array $attributes = [], bool $invisible = false): Markup
 	{
-		$settings = Plugin::$plugin->getSettings();
-
-		if ($this->getVersion() === 'v2') {
-			Craft::$app->view->registerJsFile(Craft::$app->assetManager->getPublishedUrl('@cfc/assets/js/friendlycaptchav2.min.js', true), ['async' => true, 'defer' => true, 'nomodule' => true]);
-			Craft::$app->view->registerJsFile(Craft::$app->assetManager->getPublishedUrl('@cfc/assets/js/friendlycaptchav2.module.min.js', true), ['async' => true, 'defer' => true, 'type' => 'module']);
-		}
-
-		if ($this->getVersion() === 'v1') {
-			Craft::$app->view->registerJsFile(Craft::$app->assetManager->getPublishedUrl('@cfc/assets/js/friendlycaptchav1.min.js', true), ['async' => true, 'defer' => true, 'nomodule' => true]);
-			Craft::$app->view->registerJsFile(Craft::$app->assetManager->getPublishedUrl('@cfc/assets/js/friendlycaptchav1.module.min.js', true), ['async' => true, 'defer' => true, 'type' => 'module']);
-		}
+		$settings = Plugin::getInstance()->getSettings();
 
 		$defaultAttributes = [
 			'class' => 'frc-captcha',
@@ -94,26 +95,37 @@ class ValidateService extends Component
 			'data-start' => $settings->startEvent,
 		];
 
-		if ($invisible && $this->getVersion() === 'v2') {
-			$defaultAttributes['data-start'] = 'auto';
-			$defaultAttributes['class'] .= ' frc-captcha-hidden';
-		}
-
-		if ($settings->darkMode) {
-			if ($this->getVersion() === 'v2') {
-				$defaultAttributes['data-theme'] = 'dark';
-			}
-
-			if ($this->getVersion() === 'v1') {
-				$defaultAttributes['class'] .= ' frc-captcha dark';
-			}
-		}
+		match($this->getVersion()) {
+			Settings::PLUGIN_VERSION_1 => $this->prepareV1Widget($defaultAttributes, $settings),
+			Settings::PLUGIN_VERSION_2 => $this->prepareV2Widget($defaultAttributes, $settings, $invisible),
+		};
 
 		$attributes = array_merge($defaultAttributes, $attributes);
 
-		return Template::raw(
-			Html::tag('div', '', $attributes)
-		);
+		return Template::raw(Html::tag('div', '', $attributes));
+	}
+
+	protected function prepareV1Widget(array &$attributes, Settings $settings): void
+	{
+		FriendlyCaptchaBundle::registerBundle(Settings::PLUGIN_VERSION_1);
+
+		if ($settings->darkMode) {
+			$attributes['class'] .= ' frc-captcha dark';
+		}
+	}
+
+	protected function prepareV2Widget(array &$attributes, Settings $settings, bool $invisible = false): void
+	{
+		FriendlyCaptchaBundle::registerBundle(invisible: $invisible);
+
+		if ($invisible) {
+			$attributes['data-start'] = 'auto';
+			$attributes['class'] .= ' frc-captcha-hidden';
+		}
+
+		if ($settings->darkMode) {
+			$attributes['data-theme'] = 'dark';
+		}
 	}
 
 	public function validateSolution(string $solution, string $siteKey, string $apiKey, string $endpoint = 'global'): bool

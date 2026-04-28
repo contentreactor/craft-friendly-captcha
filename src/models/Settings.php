@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace contentreactor\craftfriendlycaptcha\models;
 
@@ -11,6 +12,9 @@ use craft\helpers\App;
  */
 class Settings extends Model
 {
+	public const PLUGIN_VERSION_1 = 'v1';
+	public const PLUGIN_VERSION_2 = 'v2';
+
 	/**
 	 * siteKey from generated for the Friendly Captcha account
 	 *
@@ -45,7 +49,7 @@ class Settings extends Model
 	 *
 	 * @var string
 	 */
-	public string $version = 'v2';
+	public string $version = self::PLUGIN_VERSION_2;
 
 	/**
 	 * @var bool
@@ -62,9 +66,42 @@ class Settings extends Model
 		return App::parseEnv($this->apiKey);
 	}
 
+	/** @return self::PLUGIN_VERSION_1|self::PLUGIN_VERSION_2 */
 	public function getVersion(): string
 	{
 		return $this->version;
+	}
+
+	public function getAvailableVersions(): array
+	{
+		return [
+			[
+				'value' => self::PLUGIN_VERSION_1,
+				'label' => 'Friendly Captcha V1',
+			],
+			[
+				'value' => self::PLUGIN_VERSION_2,
+				'label' => 'Friendly Captcha V2',
+			]
+		];
+	}
+
+	public function getStartOnOptions(): array
+	{
+		return [
+			[
+				'value' => 'focus',
+				'label' => 'Focus (the solver will start as soon as possible)',
+			],
+			[
+				'value' => 'auto',
+				'label' => 'Auto (as soon as the form the widget is in fires the focusin event the solver starts)',
+			],
+			[
+				'value' => 'none',
+				'label' => 'None (the solver only starts when the user presses the button)',
+			],
+		];
 	}
 
 	public function behaviors(): array
